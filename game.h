@@ -4,6 +4,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <string.h>
+#include "save.h"
 
 void menu();
 int newGame(char playerName[100]);

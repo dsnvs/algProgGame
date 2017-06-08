@@ -14,8 +14,9 @@ void menu() {
   char filename[100];
   char playerName[100];
   int playerScore = -1, x, y;
+  FILE
 
-  mvprintw(LINES - 1, 0, "RANDOM SOKOBAN"); 
+  mvprintw(LINES - 1, 0, "RANDOM SOKOBAN");
   mvprintw(0, (COLS - 48) / 2,"[N]ew game, [S]ave, [P]ause, [H]ighscore, [Q]uit"); //print centralized menu
   do {
     opcao = getch();
@@ -38,7 +39,7 @@ void menu() {
         printw("Digite o nome do arquivo com o jogo a carregar: ");
         echo();
         getstr(filename);
-        printw("Carregando o jogo salvo no arquivo %s!\n", strcat(filename,".txt"));
+        printw("Carregando o jogo salvo no arquivo %s!\n", strcat(filename,".bin"));
         noecho();
       break;
       case 'p':
