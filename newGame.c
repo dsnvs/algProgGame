@@ -11,6 +11,13 @@ struct play { // Structure used to store and maintain the score of each game.
 };
 
 /*
+    We'll need 3 windows (alongside the standard screen), on with the map itself, one with the info about the player,
+    one for highscores (tht should override both other screens when called), in the main screen, we should have the
+    menu at the top and the save/load/error info at the bottom;
+*/
+
+
+/*
     transformToPlay receives player input and his data after a match, transforms it to a struct of type play and returns it;
 */
 
@@ -57,7 +64,8 @@ void bubbleSort(struct play* array, int i) {
     showHighscores reads all the data from the binaryfile, sort the data and display it.
 */
 
-void showHighscores() {
+void showHighscores(WINDOW * highscore) {
+    char bufferString[80]; // this will be the string variable we'll use to print the highscores, you'll understand it soon.
     FILE *binaryFileRead = fopen("scores.bin", "rb"); //Open scores.bin and assign its address to the pointer binaryFileRead
     if (binaryFileRead == NULL) { //Test if score.bin was loaded.
         printw("Unable to load.");
@@ -72,26 +80,37 @@ void showHighscores() {
         fread(scores, sizeof(struct play), i, binaryFileRead); // read binary file and store its value in struct play array scores.
         fclose(binaryFileRead); // closes binary file.
         bubbleSort(scores, i); // bubble sort array (with pointers)
+        box(highscore, 0, 0); // creates box around window highscore
+        mvwprintw(highscore, 2, 33, "Highscore"); // print "Highscore" centralized at the third line of Highscore window.
         for (int x = 0; x < 10; x++) {
-            printw("nome: %s  score: %f\n", scores[x].name, scores[x].score);
+            snprintf(bufferString, 80, "nome: %s  score: %f", scores[x].name, scores[x].score);
+            wmove(highscore, (4 + x), (76 - strlen(bufferString)) / 2 );
+            // let me explain what just happened
+            // I needed to centralize the printed string but it's size is variable depending on the name and score of the player
+            // so I used snprintf to format a string and save it to the bufferString variable, and with this info the program move the cursor
+            // for a position that'll give us sufficient space to print our string with and maintain it centralized
+            // also, the program doesn't used newlines for that, it manually moved the string everytime the for loop loops.
+            wprintw(highscore, "%s", bufferString);
         }
     }
-    refresh(); // refresh ncurses window
+    wrefresh(highscore); // refresh ncurses window
 }
 
 int main() {
-    char name[21];
     initscr(); //initialize ncurses window
-    cbreak(); // disable line buffering (which is kinda necessary for assynchronous input and instant i/o interaction)
+    WINDOW * game = newwin(20, 50, 2, 2); // game window
+    WINDOW * info = newwin(20, 25, 2, 53); // actual game info window
+    WINDOW * highscore = newwin(20, 76, 2, 2); // highscore window
+    char option; // used for the menu
+    cbreak(); // break program whenever we ctrl+c
+    noecho(); // disable line buffering (which is kinda necessary for assynchronous input and instant i/o interaction)
+    mvprintw(0, 11, "[N]ovo jogo | [S]alvar | [P]ausar | [E]score | [Q]uit");
+    box(game, 88, 88); // create a box around window
+    box(info, 0, 0);
     refresh(); // refresh ncurses window
-    srand(time(NULL)); // this is just for test and should be deleted before final version
-    scanf("%s", name); // same as above
-    int x, y, z; // same
-    x = (rand() % 200); // same
-    y = (rand() % 200); // same
-    z = 3; // same
-    appendPlay(transformToPlay(name, x, y, z)); //same
-    showHighscores(); // same
+    wrefresh(game); // refresh game window
+    wrefresh(info); // refresh info window
+    showHighscores(highscore);
     getch(); // same
     endwin(); // end ncurses window
     return 0;
