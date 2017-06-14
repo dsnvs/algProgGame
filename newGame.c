@@ -64,7 +64,8 @@ void bubbleSort(struct play* array, int i) {
     showHighscores reads all the data from the binaryfile, sort the data and display it.
 */
 
-void showHighscores(WINDOW * highscore) {
+void showHighscores() {
+    WINDOW * highscore = newwin(20, 76, 2, 2); // highscore window
     char bufferString[80]; // this will be the string variable we'll use to print the highscores, you'll understand it soon.
     FILE *binaryFileRead = fopen("scores.bin", "rb"); //Open scores.bin and assign its address to the pointer binaryFileRead
     if (binaryFileRead == NULL) { //Test if score.bin was loaded.
@@ -75,7 +76,7 @@ void showHighscores(WINDOW * highscore) {
     if (!i) { // if there aren't any struct play in the file, displays error message
         printw("there aren't any highscores stored");
     } else {
-        rewind(binaryFileRead); // rewing binary file to use it in fread();
+        rewind(binaryFileRead); // go to the start of the binary file to use it in fread();
         struct play scores[i];
         fread(scores, sizeof(struct play), i, binaryFileRead); // read binary file and store its value in struct play array scores.
         fclose(binaryFileRead); // closes binary file.
@@ -94,24 +95,72 @@ void showHighscores(WINDOW * highscore) {
         }
     }
     wrefresh(highscore); // refresh ncurses window
+    getch();
+    delwin(highscore);
+}
+
+void startNcurses() {
+    initscr(); //initialize ncurses window
+    cbreak(); // break program whenever we hit ctrl+c
+    noecho(); // disable line buffering
+    if (has_colors() && can_change_color()) {
+        start_color();
+        init_pair(1, COLOR_RED, COLOR_BLACK);
+        init_pair(2, COLOR_BLUE, COLOR_BLACK);
+        attron(COLOR_PAIR(1));
+        mvprintw(22, 3, "TEST");
+        attroff(COLOR_PAIR(1));
+    } else {
+        mvprintw(22, 3, "Terminal doesn't fully or partially support colors;");
+    }
+}
+
+void game(WINDOW * gameWindow) {
+    keypad(gameWindow, true);
+}
+
+/*
+    simple menu with do while loop for each option
+*/
+
+void menu() {
+    char menuOption;
+    scr_dump("temp.dump");
+    do {
+        menuOption = getch();
+        switch(menuOption) {
+            case 'N':
+            case 'n':
+                //newgame();
+                break;
+            case 'S':
+            case 's':
+                break;
+            // I DON'T REALLY KNOW IF I'LL USE THIS P CASE;
+            case 'P':
+            case 'p':
+                //pausegame();
+                break;
+            case 'E':
+            case 'e':
+                showHighscores();
+                scr_restore("temp.dump");
+                refresh();
+                break;
+            default:
+                break;
+        }
+    } while(menuOption != 'q' && menuOption != 'Q');
 }
 
 int main() {
-    initscr(); //initialize ncurses window
+    startNcurses();
     WINDOW * game = newwin(20, 50, 2, 2); // game window
     WINDOW * info = newwin(20, 25, 2, 53); // actual game info window
-    WINDOW * highscore = newwin(20, 76, 2, 2); // highscore window
-    char option; // used for the menu
-    cbreak(); // break program whenever we ctrl+c
-    noecho(); // disable line buffering (which is kinda necessary for assynchronous input and instant i/o interaction)
     mvprintw(0, 11, "[N]ovo jogo | [S]alvar | [P]ausar | [E]score | [Q]uit");
-    box(game, 88, 88); // create a box around window
-    box(info, 0, 0);
     refresh(); // refresh ncurses window
-    wrefresh(game); // refresh game window
-    wrefresh(info); // refresh info window
-    showHighscores(highscore);
-    getch(); // same
+    menu();
+    getch();
     endwin(); // end ncurses window
     return 0;
 }
