@@ -1,21 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <ncurses.h>
-#include <time.h>
-
-struct play { // Structure used to store and maintain the score of each game.
-    char name[21];
-    float score;
-};
-
-/*
-    We'll need 3 windows (alongside the standard screen), on with the map itself, one with the info about the player,
-    one for highscores (tht should override both other screens when called), in the main screen, we should have the
-    menu at the top and the save/load/error info at the bottom;
-*/
-
+#include "highscores.h"
 
 /*
     transformToPlay receives player input and his data after a match, transforms it to a struct of type play and returns it;
@@ -97,70 +80,4 @@ void showHighscores() {
     wrefresh(highscore); // refresh ncurses window
     getch();
     delwin(highscore);
-}
-
-void startNcurses() {
-    initscr(); //initialize ncurses window
-    cbreak(); // break program whenever we hit ctrl+c
-    noecho(); // disable line buffering
-    if (has_colors() && can_change_color()) { // checks if termianl supports colors, and supports personalized colors
-        start_color();
-        init_pair(1, COLOR_RED, COLOR_BLACK); // creates pair of colors
-        init_pair(2, COLOR_BLUE, COLOR_BLACK);
-        attron(COLOR_PAIR(1)); // turn's on pair of color number 1
-        mvprintw(22, 3, "TEST");
-        attroff(COLOR_PAIR(1)); // turn pair off
-    } else {
-        mvprintw(22, 3, "Terminal doesn't fully or partially support colors;");
-    }
-}
-
-void game(WINDOW * gameWindow) {
-    keypad(gameWindow, true); // turns on support for additional keys in gameWindow, those are used for movement with arrow keys
-}
-
-/*
-    simple menu with do while loop for each option
-*/
-
-void menu() {
-    char menuOption;
-    scr_dump("temp.dump"); // dump current content of screen at a temporary file, in case player access highscore, but this will probably be removed to insert a new way of dealing with this issue
-    do {
-        menuOption = getch();
-        switch(menuOption) {
-            case 'N':
-            case 'n':
-                //newgame();
-                break;
-            case 'S':
-            case 's':
-                break;
-            // I DON'T REALLY KNOW IF I'LL USE THIS P CASE;
-            case 'P':
-            case 'p':
-                //pausegame();
-                break;
-            case 'E':
-            case 'e':
-                showHighscores();
-                scr_restore("temp.dump"); // restores screen from other dump;
-                refresh();
-                break;
-            default:
-                break;
-        }
-    } while(menuOption != 'q' && menuOption != 'Q');
-}
-
-int main() {
-    startNcurses();
-    WINDOW * game = newwin(20, 50, 2, 2); // game window
-    WINDOW * info = newwin(20, 25, 2, 53); // actual game info window
-    mvprintw(0, 11, "[N]ovo jogo | [S]alvar | [P]ausar | [E]score | [Q]uit");
-    refresh(); // refresh ncurses window
-    menu();
-    getch();
-    endwin(); // end ncurses window
-    return 0;
 }

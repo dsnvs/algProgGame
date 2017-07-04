@@ -1,4 +1,4 @@
 all: game
 
-game: newGame.c
-	gcc newGame.c -lncurses -lm
+game: game.c
+	gcc game.c inGame.c highscores.c -lncurses -lm -o game
