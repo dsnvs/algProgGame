@@ -67,17 +67,16 @@ void showHighscores() {
         box(highscore, 0, 0); // creates box around window highscore
         mvwprintw(highscore, 2, 33, "Highscore"); // print "Highscore" centralized at the third line of Highscore window.
         for (int x = 0; x < 10; x++) {
-            snprintf(bufferString, 80, "nome: %s  score: %f", scores[x].name, scores[x].score);
+            snprintf(bufferString, 80, "name: %s  score: %f", scores[x].name, scores[x].score);
             wmove(highscore, (4 + x), (76 - strlen(bufferString)) / 2 );
             // let me explain what just happened
             // I needed to centralize the printed string but it's size is variable depending on the name and score of the player
             // so I used snprintf to format a string and save it to the bufferString variable, and with this info the program move the cursor
             // for a position that'll give us sufficient space to print our string with and maintain it centralized
-            // also, the program doesn't used newlines for that, it manually moved the string everytime the for loop loops.
+            // also, the program doesn't use newlines for that, it manually moved the string everytime the for loop loops.
             wprintw(highscore, "%s", bufferString);
         }
     }
     wrefresh(highscore); // refresh ncurses window
-    getch();
     delwin(highscore);
 }

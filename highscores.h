@@ -6,10 +6,10 @@
 
 #ifndef HIGHSCORES_H
 #define HIGHSCORES_H
-struct play { // Structure used to store and maintain the score of each game.
+typedef struct play { // Structure used to store and maintain the score of each game.
     char name[21];
     float score;
-};
+} play;
 
 /*
     transformToPlay receives player input and his data after a match, transforms it to a struct of type play and returns it;

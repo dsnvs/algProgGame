@@ -1,45 +1,8 @@
 #include <stdlib.h>
-#include <string.h>
 #include <ncurses.h>
 #include "highscores.h"
 #include "inGame.h"
-
-void startNcurses() {
-    initscr(); //initialize ncurses window
-    cbreak(); // break program whenever we hit ctrl+c
-    noecho(); // disable line buffering
-    if (has_colors() && can_change_color()) { // checks if termianl supports colors, and supports personalized colors
-        start_color();
-        init_pair(1, COLOR_RED, COLOR_BLACK); // creates pair of colors
-        init_pair(2, COLOR_BLUE, COLOR_BLACK);
-        attron(COLOR_PAIR(1)); // turn's on pair of color number 1
-        mvprintw(22, 3, "TEST");
-        attroff(COLOR_PAIR(1)); // turn pair off
-    } else {
-        mvprintw(22, 3, "Terminal doesn't fully or partially support colors;");
-    }
-}
-
-void newGame(gameState *save) {
-    character player;
-    save->level = 1;
-    save->found = 0;
-    for (int i = 0; i < 3; i++)
-        save->timeSpent[i] = 0;
-    createLevel(save);
-    save->player = player;
-}
-/*
-    character player = *save.player;
-    int foundPositions = save.found, level = save.level, move;
-    int timeSpent[3];
-    for (int i = 0; i < level; i++)
-        timeSpent[i] = save.timeSpent[i];
-    clock_t initialTime;
-    finalPosition positions[5];
-    for (int i = 0; i < level + 2; i++)
-        positions[i] = save.positions[i];
-*/
+#include "save.h"
 
 void game(gameState *save) {
     int move;
@@ -55,25 +18,37 @@ void game(gameState *save) {
         startCharacter(&save->player, game);
         setWindow(game, save);
         wrefresh(game);
-        infoUpdate(info, save->timeSpent[save->level], save->found, save->level);
+        infoUpdate(info, save);
         while (save->found < save->level + 2) {
             move = movePlayer(save, game);
-            if (move == (int)'p'){
+            if (move == (int)'\t'){
                 delwin(game);
                 delwin(info);
-                mvwprintw(stdscr, 22, 3, "y: %d x: %d formula: %d", save->player.y, save->player.x, ((save->player.y / 2) * 24) + save->player.x / 2);
                 save->scenario[((save->player.y / 2) * 26) + save->player.x / 2] = '1';
                 return;
             }
             wrefresh(game);
-            save->timeSpent[save->level] = (double)(clock() - initialTime) / CLOCKS_PER_SEC;
+            if (((double)(clock() - initialTime) / CLOCKS_PER_SEC) > 1) {
+                initialTime = clock();
+                save->timeSpent[save->level]++;
+            }
             refresh();
-            infoUpdate(info, save->timeSpent[save->level], save->found, save->level);
+            infoUpdate(info, save);
         }
         save->level++;
         save->found = 0;
         createLevel(save);
     }
+    werase(info);
+    werase(game);
+    delwin(game);
+    delwin(info);
+    mvwprintw(stdscr, 15, 3, "PLAYER NAME: ");
+    wrefresh(stdscr);
+    echo();
+    scanw("%s", save->score.name);
+    noecho();
+    return;
 }
 
 /*
@@ -93,28 +68,39 @@ void menu() {
                 break;
             case 'S':
             case 's':
-                game(&save);
                 break;
             // I DON'T REALLY KNOW IF I'LL USE THIS P CASE;
             case 'P':
             case 'p':
-                //pausegame();
+                pauseGame(save);
+                while (getch() != 'p');
+                save = unpauseGame();
                 break;
             case 'E':
             case 'e':
                 showHighscores();
-                scr_restore("temp.dump"); // restores screen from other dump;
                 refresh();
                 break;
+            case 'Q':
+            case 'q':
+                appendPlay(save.score);
+            break;
+            case '\t':
+                move(2, 0);
+                clrtobot();
+                game(&save);
+            break;
             default:
-                break;
+            break;
         }
     } while(menuOption != 'q' && menuOption != 'Q');
 }
 
 
 int main() {
-    startNcurses();
+    initscr(); //initialize ncurses window
+    cbreak(); // break program whenever we hit ctrl+c
+    noecho(); // disable line buffering
     mvprintw(0, 11, "[N]ovo jogo | [S]alvar | [P]ausar | [E]score | [Q]uit");
     refresh(); // refresh ncurses window
     menu();
