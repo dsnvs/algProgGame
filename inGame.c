@@ -1,5 +1,12 @@
 #include "inGame.h"
 
+void foundPos (WINDOW *game,int y, int x) {
+        mvwaddch(game, y, x, 'x');
+        mvwaddch(game, y + 1, x, 'x');
+        mvwaddch(game, y, x + 1, 'x');
+        mvwaddch(game, y + 1, x + 1, 'x');
+}
+
 void deletePlayer (character player) {
     mvwaddch(player.curwin, player.y, player.x, ' ');
     mvwaddch(player.curwin, player.y + 1, player.x, ' ');
@@ -7,7 +14,9 @@ void deletePlayer (character player) {
     mvwaddch(player.curwin, player.y + 1, player.x + 1, ' ');
 }
 
-void moveBlock (WINDOW *game, int y, int x) {
+void moveBlock (gameState *save, WINDOW *game, int y, int x, int oldY, int oldX) {
+    save->scenario[(oldY / 2) * 26 + oldX / 2] = '0';
+    save->scenario[(y / 2) * 26 + x / 2] = '2';
     mvwaddch(game, y, x, '2');
     mvwaddch(game, y + 1, x, '2');
     mvwaddch(game, y, x + 1, '2');
@@ -48,14 +57,56 @@ int checkChar (int y, int x, WINDOW *game, char way) {
     return block;
 }
 
-void moveUp(character *player) {
-    deletePlayer(*player);
-    player->y -= 2;
+void moveUp(gameState *save, WINDOW *game) {
+    int y, x;
+    char validMove;
+    validMove = checkChar(save->player.y, save->player.x, game, 'u');
+    if (validMove == ' ') {
+        deletePlayer(save->player);
+        save->player.y -= 2;
+    } else if (validMove == '2') {
+        y = save->player.y - 2;
+        x = save->player.x;
+        validMove = checkChar(y, x, game, 'u');
+        if (validMove == ' ') {
+            moveBlock(save, game, y - 2, x, y, x);
+            deletePlayer(save->player);
+            save->player.y -= 2;
+        }
+        for (int i = 0; i < (save->level + 2); i++) {
+            if (save->positions[i].x == x && save->positions[i].y == y && save->positions[i].found == 0) {
+                foundPos(game, y, x);
+                save->positions[i].found = 1;
+                save->found++;
+            }
+        }
+    }
 };
 
-void moveDown(character *player) {
-    deletePlayer(*player);
-    player->y += 2;
+void moveDown(gameState *save, WINDOW *game) {
+    int y, x;
+    char validMove;
+    validMove = checkChar(save->player.y, save->player.x, game, 'd');
+    if (validMove == ' ') {
+        deletePlayer(save->player);
+        save->player.y += 2;
+    } else if (validMove == '2') {
+        y = save->player.y + 4;
+        x = save->player.x;
+        validMove = checkChar(y - 2, x, game, 'd');
+        if (validMove == ' ') {
+            moveBlock(save, game, y, x, (y + 2), x);
+            deletePlayer(save->player);
+            save->player.y += 2;
+        }
+        for (int i = 0; i < (save->level + 2); i++) {
+            if (save->positions[i].x == x && save->positions[i].y == y && save->positions[i].found == 0) {
+                foundPos(game, y, x);
+                save->positions[i].found = 1;
+                save->found++;
+            }
+        }
+    }
 };
 
 void moveLeft(character *player) {
@@ -86,103 +137,24 @@ int randomPositionsGenerator(char *txt) {
     return aleatorios;
 }
 
-void foundPos (WINDOW *game,int y, int x) {
-        mvwaddch(game, y, x, 'x');
-        mvwaddch(game, y + 1, x, 'x');
-        mvwaddch(game, y, x + 1, 'x');
-        mvwaddch(game, y + 1, x + 1, 'x');
-}
-
-int movePlayer(character *player, WINDOW *game, finalPosition *positions, int level) {
-    int option, x, y, encontrou = 0;
-    char validMove;
-    option = wgetch(player->curwin);
+int movePlayer(gameState *save, WINDOW *game) {
+    int option = ERR;
+    time_t initialTime = clock();
+    while (option == ERR && (clock() - initialTime)/CLOCKS_PER_SEC < 1) {
+        option = wgetch(game);
+    }
     switch (option) {
         case KEY_UP:
-            validMove = checkChar(player->y, player->x, game, 'u');
-            if (validMove == ' ') {
-                moveUp(player);
-            } else if (validMove == '2') {
-                y = player->y - 4;
-                x = player->x;
-                validMove = checkChar(y + 2, x, game, 'u');
-                if (validMove == ' ') {
-                    moveBlock(game, y, x);
-                    moveUp(player);
-                }
-                for (int i = 0; i < (level + 3); i++) {
-                    if (positions[i].x == x && positions[i].y == y) {
-                        foundPos(game, y, x);
-                        encontrou++;
-                    }
-                }
-            }
+            moveUp(save, game);
         break;
         case KEY_DOWN:
-            validMove = checkChar(player->y, player->x, game, 'd');
-            if (validMove == ' ') {
-                moveDown(player);
-            } else if (validMove == '2') {
-                y = player->y + 4;
-                x = player->x;
-                validMove = checkChar(y + 2, x, game, 'u');
-                if (validMove == ' ') {
-                    moveBlock(game, y, x);
-                    moveDown(player);
-                }
-                for (int i = 0; i < (level + 3); i++) {
-                    if (positions[i].x == x && positions[i].y == y) {
-                        foundPos(game, y, x);
-                        encontrou++;
-                    }
-                }
-            }
-        break;
-        case KEY_LEFT:
-            validMove = checkChar(player->y, player->x, game, 'l');
-            if (validMove == ' ') {
-                moveLeft(player);
-            } else if (validMove == '2') {
-                y = player->y;
-                x = player->x - 4;
-                validMove = checkChar(y + 2, x, game, 'u');
-                if (validMove == ' ') {
-                    moveBlock(game, y, x);
-                    moveLeft(player);
-                }
-                for (int i = 0; i < (level + 3); i++) {
-                    if (positions[i].x == x && positions[i].y == y) {
-                        foundPos(game, y, x);
-                        encontrou++;
-                    }
-                }
-            }
-        break;
-        case KEY_RIGHT:
-            validMove = checkChar(player->y, player->x, game, 'r');
-            if (validMove == ' ') {
-                moveRight(player);
-            } else if (validMove == '2') {
-                y = player->y;
-                x = player->x + 4;
-                validMove = checkChar(y + 2, x, game, 'u');
-                if (validMove == ' ') {
-                    moveBlock(game, y, x);
-                    moveRight(player);
-                }
-                for (int i = 0; i < (level + 3); i++) {
-                    if (positions[i].x == x && positions[i].y == y) {
-                        foundPos(game, y, x);
-                        encontrou++;
-                    }
-                }
-            }
+            moveDown(save, game);
         break;
         default:
         break;
     }
-    createPlayer(*player);
-    return encontrou;
+    createPlayer(save->player);
+    return (int)option;
 }
 
 void startCharacter(character *player, WINDOW *gameWindow) {
@@ -206,13 +178,11 @@ void blockCreator(char letter, WINDOW *game) {
     wmove(game, y, x + 2);
 }
 
-void createLevel (int level, WINDOW *game, character *player, finalPosition *positions) {
+void createLevel (gameState *save) {
     FILE * textFile;
-    char txt[260];
-    int x, y, arrayRunner = 0;
-    if (level == 3) {
+    if (save->level == 1) {
         textFile = fopen("nivel1.txt", "r");
-    } else if (level == 2) {
+    } else if (save->level == 2) {
         textFile = fopen("nivel2.txt", "r");
     } else {
         textFile = fopen("nivel3.txt", "r");
@@ -221,49 +191,39 @@ void createLevel (int level, WINDOW *game, character *player, finalPosition *pos
         printf("erro na abertura do arquivo texto");
     } else {
         for (int i = 0; i < 259; i++) {
-            txt[i] = fgetc(textFile);
+            save->scenario[i] = fgetc(textFile);
         }
-        randomPositionsGenerator(txt);
-        for (int i = 0; i < 259; i++) {
-            if (txt[i] == 'x' || txt[i] == '0' || txt[i] == '2') {
-                blockCreator(txt[i], game);
-            } else if (txt[i] == '\n') {
-                getyx(game, y, x);
-                wmove(game, y + 2, 0);
-            } else if (txt[i] == '1') {
-                txt[i] = player->character;
-                getyx(game, player->y, player->x);
-                blockCreator(txt[i], game);
-            } else if (txt[i] == '*') {
-                getyx(game, positions[arrayRunner].y, positions[arrayRunner].x);
-                arrayRunner++;
-                blockCreator(' ', game);
-            }
+        randomPositionsGenerator(save->scenario);
+    }
+    fclose(textFile);
+}
+
+void setWindow(WINDOW* game, gameState *save) {
+    int x, y, j = 0;
+    mvwinch(game, 0, 0);
+    for (int i = 0; i < 259; i++) {
+        if (save->scenario[i] == 'x' || save->scenario[i] == '0' || save->scenario[i] == '2') {
+            blockCreator(save->scenario[i], game);
+        } else if (save->scenario[i] == '\n') {
+            getyx(game, y, x);
+            wmove(game, y + 2, 0);
+        } else if (save->scenario[i] == '1') {
+            getyx(game, save->player.y, save->player.x);
+            blockCreator(save->scenario[i], game);
+            save->scenario[i] = '0';
+        } else if (save->scenario[i] == '*') {
+            getyx(game, save->positions[j].y, save->positions[j].x);
+            save->positions[j].found = 0;
+            j++;
+            blockCreator('*', game);
         }
     }
 }
 
-int newGame() {
-    character player;
-    int level = 1, posicoesEncontradas = 0;
-    finalPosition positions[level + 3];
-    WINDOW * game = newwin(20, 50, 2, 2); // game window
-    WINDOW * info = newwin(20, 25, 2, 53); // actual game info window
-    box(info, 0, 0);
-    refresh();
-    keypad(game, true);
-    startCharacter(&player, game);
-    createLevel(level, game, &player, positions);
-    while (posicoesEncontradas < level + 3) {
-        movePlayer(&player, game, positions, level);
-        wrefresh(game);
-    }
-    return 0;
+void infoUpdate (WINDOW *info, float timeSpent, int foundPositions, int level) {
+    mvwprintw(info, 3, 9, "Level %d", level);
+    mvwprintw(info, 5, 5, "Found positions:");
+    mvwprintw(info, 6, 10, "%d of %d", foundPositions, level + 2);
+    mvwprintw(info, 9, 5, "Time spent: %d", (int)timeSpent);
+    wrefresh (info);
 }
-
-/*
-
-MUDAR O checkChar PARA TRABALHAR COM X E Y, NÃO ESTRUTURA, CRIAR COLISAO PARA BLOCOS E CASO AS NOVAS COORDENADAS DO BLOCO SEJAM
-IGUAIS A UMA POSICAO FINAL, TRANSFORMAR EM 0;
-
-*/
