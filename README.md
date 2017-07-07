@@ -9,5 +9,3 @@ The game is essentially Sokoban but without the final position of the blocks bei
 ## What I used
 
  I used the functions of the C standard library to make most of the functionalities but also used **[ncurses.h](http://tldp.org/HOWTO/NCURSES-Programming-HOWTO/)** to interact with the screen.
-
-### [Trello Board](https://trello.com/b/m7cLEI6b/algproggame)
