@@ -5,20 +5,29 @@
 #include "save.h"
 
 void game(gameState *save) {
-    int move;
+    int move, remainingTime;
     clock_t initialTime;
     WINDOW * game = newwin(20, 50, 2, 2); // game window
     WINDOW * info = newwin(20, 25, 2, 53); // actual game info window
     nodelay(game, true);
-    box(info, 0, 0);
     refresh();
     keypad(game, true);
     while (save->level <= 3) {
+        if (save->level == 1) {
+            remainingTime = 90;
+        } else if (save->level == 2) {
+            remainingTime = 60;
+        } else if (save->level == 3) {
+            remainingTime = 45;
+        }
         initialTime = clock();
         startCharacter(&save->player, game);
         setWindow(game, save);
         wrefresh(game);
+        wrefresh(info);
+        box(info, 0, 0);
         infoUpdate(info, save);
+        wrefresh(info);
         while (save->found < save->level + 2) {
             move = movePlayer(save, game);
             if (move == (int)'\t'){
@@ -27,14 +36,15 @@ void game(gameState *save) {
                 save->scenario[((save->player.y / 2) * 26) + save->player.x / 2] = '1';
                 return;
             }
-            wrefresh(game);
             if (((double)(clock() - initialTime) / CLOCKS_PER_SEC) > 1) {
                 initialTime = clock();
-                save->timeSpent[save->level]++;
+                save->timeSpent[save->level - 1]++;
+                remainingTime--;
             }
-            refresh();
             infoUpdate(info, save);
+            wrefresh(info);
         }
+        wclear(info);
         save->level++;
         save->found = 0;
         createLevel(save);
@@ -43,11 +53,10 @@ void game(gameState *save) {
     werase(game);
     delwin(game);
     delwin(info);
-    mvwprintw(stdscr, 15, 3, "PLAYER NAME: ");
-    wrefresh(stdscr);
-    echo();
-    scanw("%s", save->score.name);
-    noecho();
+    save->score = transformToPlay (save->score.name, save->timeSpent[0] + save->timeSpent[1] + save->timeSpent[2], save->movement[0] + save->movement[1] + save->movement[2], save->level - 1);
+    mvprintw(10, 15, "YOU WIN!!!!");
+    mvprintw(11, 15, "%.2f POINTS!", save->score.score);
+    refresh();
     return;
 }
 
@@ -64,11 +73,18 @@ void menu() {
             case 'N':
             case 'n':
                 newGame(&save);
+                searchPlayer(&save.score);
                 game(&save);
                 break;
             case 'S':
             case 's':
-                break;
+                saveGame(save);
+            break;
+            case 'l':
+            case 'L':
+                loadGame(&save);
+                game(&save);
+            break;
             // I DON'T REALLY KNOW IF I'LL USE THIS P CASE;
             case 'P':
             case 'p':
@@ -76,13 +92,19 @@ void menu() {
                 while (getch() != 'p');
                 save = unpauseGame();
                 break;
-            case 'E':
-            case 'e':
+            case 'H':
+            case 'h':
                 showHighscores();
                 refresh();
                 break;
             case 'Q':
             case 'q':
+                if (save.level == 3) {
+                    save.score = transformToPlay (save.score.name, save.timeSpent[0] + save.timeSpent[1], save.movement[0] + save.movement[1], save.level - 1);
+                } else if (save.level == 2) {
+                    save.score = transformToPlay (save.score.name, save.timeSpent[0], save.movement[0], save.level - 1);
+                }
+                mvprintw(23, 1, "%f", save.score.score);
                 appendPlay(save.score);
             break;
             case '\t':
@@ -101,7 +123,7 @@ int main() {
     initscr(); //initialize ncurses window
     cbreak(); // break program whenever we hit ctrl+c
     noecho(); // disable line buffering
-    mvprintw(0, 11, "[N]ovo jogo | [S]alvar | [P]ausar | [E]score | [Q]uit");
+    mvprintw(0, 11, "[N]ew game | [S]ave | [L]oad | [P]ause | [H]ighscore | [Q]uit");
     refresh(); // refresh ncurses window
     menu();
     endwin(); // end ncurses window

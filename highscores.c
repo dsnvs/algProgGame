@@ -18,16 +18,44 @@ struct play transformToPlay (char name[21], int timeSpent, int moves, int comple
 void appendPlay (struct play temporary) {
     FILE *binaryFile = fopen("scores.bin", "ab"); // open binary file in append mode
     if (binaryFile == NULL) { // check if had success opening binary file
-        printw("Unable to save.");
+        mvprintw(23, 3, "Unable to save.");
     }
     fwrite(&temporary, sizeof(struct play), 1, binaryFile); //append received struct play in binary file
     fclose(binaryFile); // close binary file
 }
 
+
+int searchPlayer(struct play *player) {
+    FILE *binaryFile = fopen("scores.bin", "rb");
+    play *scores;
+    int i, j;
+    if (binaryFile == NULL) {
+        mvprintw(23, 3, "Unable to open scores.bin");
+        return -1;
+    } else {
+        fseek(binaryFile, 0L, SEEK_END);
+        i = ftell(binaryFile) / sizeof(play);
+        rewind(binaryFile);
+        scores = malloc(sizeof(*scores)*i);
+        fread(scores, sizeof(struct play), i, binaryFile);
+        fclose(binaryFile);
+        bubbleSort(scores, i);
+        for (j = 0; j < i; j++) {
+            if (strcmp(player->name, scores[j].name) == 0) {
+                player->score = scores[j].score;
+                free(scores);
+                refresh();
+                return 0;
+            }
+        }
+        free(scores);
+        return 1;
+    }
+}
+
 /*
     Simple bubble sort implementation used to sort the scores loaded from the binary file.
 */
-
 
 void bubbleSort(struct play* array, int i) {
     struct play x;

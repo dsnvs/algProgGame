@@ -71,7 +71,7 @@ void moveUp(gameState *save, WINDOW *game) {
     if (validMove == ' ') {
         deletePlayer(save->player);
         save->player.y -= 2;
-        save->movement++;
+        save->movement[save->level - 1]++;
     } else if (validMove == '2') {
         y = save->player.y - 2;
         x = save->player.x;
@@ -80,7 +80,7 @@ void moveUp(gameState *save, WINDOW *game) {
             moveBlock(save, game, y - 2, x, y, x);
             deletePlayer(save->player);
             save->player.y -= 2;
-            save->movement++;
+            save->movement[save->level - 1]++;
         }
         foundPos(save, game, y - 2, x);
     }
@@ -94,7 +94,7 @@ void moveDown(gameState *save, WINDOW *game) {
     if (validMove == ' ') {
         deletePlayer(save->player);
         save->player.y += 2;
-        save->movement++;
+        save->movement[save->level - 1]++;
     } else if (validMove == '2') {
         y = save->player.y + 2;
         x = save->player.x;
@@ -103,7 +103,7 @@ void moveDown(gameState *save, WINDOW *game) {
             moveBlock(save, game, y + 2, x, y, x);
             deletePlayer(save->player);
             save->player.y += 2;
-            save->movement++;
+            save->movement[save->level - 1]++;
         }
         foundPos(save, game, y + 2, x);
     }
@@ -116,7 +116,7 @@ void moveLeft(gameState *save, WINDOW *game) {
     if (validMove == ' ') {
         deletePlayer(save->player);
         save->player.x -= 2;
-        save->movement++;
+        save->movement[save->level - 1]++;
     } else if (validMove == '2') {
         y = save->player.y;
         x = save->player.x - 2;
@@ -125,7 +125,7 @@ void moveLeft(gameState *save, WINDOW *game) {
             moveBlock(save, game, y, x - 2, y, x);
             deletePlayer(save->player);
             save->player.x -= 2;
-            save->movement++;
+            save->movement[save->level - 1]++;
         }
         foundPos(save, game, y, x - 2);
     }
@@ -138,7 +138,7 @@ void moveRight(gameState *save, WINDOW *game) {
     if (validMove == ' ') {
         deletePlayer(save->player);
         save->player.x += 2;
-        save->movement++;
+        save->movement[save->level - 1]++;
     } else if (validMove == '2') {
         y = save->player.y;
         x = save->player.x + 2;
@@ -147,7 +147,7 @@ void moveRight(gameState *save, WINDOW *game) {
             moveBlock(save, game, y, x + 2, y, x);
             deletePlayer(save->player);
             save->player.x += 2;
-            save->movement++;
+            save->movement[save->level - 1]++;
         }
         foundPos(save, game, y, x + 2);
     }
@@ -249,36 +249,45 @@ void setWindow(WINDOW* game, gameState *save) {
             wmove(game, y + 2, 0);
         } else if (save->scenario[i] == '1') {
             getyx(game, save->player.y, save->player.x);
-            blockCreator(save->scenario[i], game);
+            blockCreator('+', game);
             save->scenario[i] = '0';
         } else if (save->scenario[i] == '*') {
             getyx(game, save->positions[j].y, save->positions[j].x);
             save->positions[j].found = 0;
             j++;
-            blockCreator('*', game);
+            blockCreator('0', game);
         }
     }
 }
 
 void infoUpdate (WINDOW *info, gameState *save) {
-    save->score = transformToPlay (save->score.name, save->timeSpent[save->level], save->movement, save->level);
     mvwprintw(info, 3, 9, "Level %d", save->level);
     mvwprintw(info, 5, 5, "Found positions:");
     mvwprintw(info, 6, 10, "%d of %d", save->found, save->level + 2);
-    mvwprintw(info, 9, 5, "Time spent: %d", (int)save->timeSpent[save->level]);
+    if (save->level == 1) {
+        mvwprintw(info, 9, 5, "Remaining time: %d", 90 - (int)save->timeSpent[save->level - 1]);
+    } else if (save->level == 2) {
+        mvwprintw(info, 9, 5, "Remaining time: %d", 60 - (int)save->timeSpent[save->level - 1]);
+    } else {
+        mvwprintw(info, 9, 5, "Remaining time: %d", 45 - (int)save->timeSpent[save->level - 1]);
+    }
     mvwprintw(info, 12, 4, "%s", save->score.name);
     mvwprintw(info, 13, 4, "Score: %.1f", save->score.score);
-    mvwprintw(info, 15, 4, "Movements: %d", save->movement);
-    wrefresh (info);
+    mvwprintw(info, 15, 4, "Movements: %d", save->movement[save->level - 1]);
 }
 
 void newGame(gameState *save) {
     character player;
     save->level = 1;
     save->found = 0;
-    for (int i = 0; i < 3; i++) {
-        save->timeSpent[i] = 0;
-        save->movement = 0;
+    for (int i = 0; i < 5; i++) {
+        save->positions[i].x = 0;
+        save->positions[i].y = 0;
+        save->positions[i].found = 0;
+        if ( i < 3) {
+            save->timeSpent[i] = 0;
+            save->movement[i] = 0;
+        }
     }
     mvwprintw(stdscr, 23, 3, "PLAYER NAME: ");
     wrefresh(stdscr);
@@ -288,9 +297,8 @@ void newGame(gameState *save) {
     move(23, 0);
     clrtoeol();
     wrefresh(stdscr);
-
-    save->score = transformToPlay (save->score.name, 0, 0, 0);
     save->score.score = 0;
+    refresh();
     createLevel(save);
     save->player = player;
 }

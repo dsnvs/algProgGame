@@ -22,7 +22,7 @@ typedef struct gameState {
     play score;
     character player;
     finalPosition positions[5];
-    int level, found, timeSpent[3], movement;
+    int level, found, timeSpent[3], movement[3];
 } gameState;
 
 void deletePlayer (character player);
