@@ -1,61 +1,41 @@
 #include "highscores.h"
 
-/*
-    transformToPlay receives player input and his data after a match, transforms it to a struct of type play and returns it;
-*/
-
 struct play transformToPlay (char name[21], int timeSpent, int moves, int completeLevels) {
     struct play temporary;
-    strcpy(temporary.name, name); // copy string name to temporary.name
-    temporary.score = (pow(10, 3) * pow(completeLevels, 3) / (moves + (timeSpent / 2))); // Calculating player score;
+    strcpy(temporary.name, name);
+    temporary.score = (pow(10, 3) * pow(completeLevels, 3) / (moves + (timeSpent / 2)));
     return temporary;
 }
 
-/*
-    appendPlay receives a struct of type play and append it to the binary highscores file.
-*/
-
 void appendPlay (struct play temporary) {
-    FILE *binaryFile = fopen("scores.bin", "ab"); // open binary file in append mode
-    if (binaryFile == NULL) { // check if had success opening binary file
+    FILE *binaryFile = fopen("scores.bin", "ab");
+    if (binaryFile == NULL) {
         mvprintw(23, 3, "Unable to save.");
+    } else {
+        fwrite(&temporary, sizeof(struct play), 1, binaryFile);
+        fclose(binaryFile);
     }
-    fwrite(&temporary, sizeof(struct play), 1, binaryFile); //append received struct play in binary file
-    fclose(binaryFile); // close binary file
 }
 
 
 int searchPlayer(struct play *player) {
+    play score;
+    int found = -1;
     FILE *binaryFile = fopen("scores.bin", "rb");
-    play *scores;
-    int i, j;
     if (binaryFile == NULL) {
         mvprintw(23, 3, "Unable to open scores.bin");
-        return -1;
     } else {
-        fseek(binaryFile, 0L, SEEK_END);
-        i = ftell(binaryFile) / sizeof(play);
-        rewind(binaryFile);
-        scores = malloc(sizeof(*scores)*i);
-        fread(scores, sizeof(struct play), i, binaryFile);
-        fclose(binaryFile);
-        bubbleSort(scores, i);
-        for (j = 0; j < i; j++) {
-            if (strcmp(player->name, scores[j].name) == 0) {
-                player->score = scores[j].score;
-                free(scores);
-                refresh();
-                return 0;
-            }
+        do {
+            fread(&score, sizeof(struct play), 1, binaryFile);
+        } while (strcmp(player->name, score.name) != 0 && !feof(binaryFile));
+        if (strcmp(player->name, score.name) == 0) {
+            player->score = score.score;
+            found = 0;
         }
-        free(scores);
-        return 1;
+        fclose(binaryFile);
     }
+    return found;
 }
-
-/*
-    Simple bubble sort implementation used to sort the scores loaded from the binary file.
-*/
 
 void bubbleSort(struct play* array, int i) {
     struct play x;
@@ -70,41 +50,43 @@ void bubbleSort(struct play* array, int i) {
     }
 }
 
-
-/*
-    showHighscores reads all the data from the binaryfile, sort the data and display it.
-*/
-
 void showHighscores() {
-    WINDOW * highscore = newwin(20, 76, 2, 2); // highscore window
-    char bufferString[80]; // this will be the string variable we'll use to print the highscores, you'll understand it soon.
-    FILE *binaryFileRead = fopen("scores.bin", "rb"); //Open scores.bin and assign its address to the pointer binaryFileRead
-    if (binaryFileRead == NULL) { //Test if score.bin was loaded.
-        printw("Unable to load.");
+    char bufferString[80];
+    int numberOfScores;
+    play *scores;
+    FILE *binFile = fopen("scores.bin", "rb");
+    WINDOW *highscore = newwin(20, 76, 2, 2);
+    box(highscore, 0, 0);
+    if (binFile == NULL) {
+        printw("Unable to load scores.bin.");
     }
-    fseek(binaryFileRead, 0L, SEEK_END); // goes to the end of the file (required for the following line)
-    int i = ftell(binaryFileRead) / sizeof(struct play); // we'll use I as our counter of how many play structs are stored on the bin file, ftell shows current position in bytes and sizeof gives us the size of a struct play, I divide then and get how many struct plays are stored in the file.
-    if (!i) { // if there aren't any struct play in the file, displays error message
-        printw("there aren't any highscores stored");
+    fseek(binFile, 0L, SEEK_END);
+    numberOfScores = ftell(binFile) / sizeof(struct play);
+    if (numberOfScores == 0) {
+        printw("There aren't any highscores stored in scores.bin");
     } else {
-        rewind(binaryFileRead); // go to the start of the binary file to use it in fread();
-        struct play scores[i];
-        fread(scores, sizeof(struct play), i, binaryFileRead); // read binary file and store its value in struct play array scores.
-        fclose(binaryFileRead); // closes binary file.
-        bubbleSort(scores, i); // bubble sort array (with pointers)
-        box(highscore, 0, 0); // creates box around window highscore
-        mvwprintw(highscore, 2, 33, "Highscore"); // print "Highscore" centralized at the third line of Highscore window.
-        for (int x = 0; x < 10; x++) {
-            snprintf(bufferString, 80, "name: %s  score: %f", scores[x].name, scores[x].score);
-            wmove(highscore, (4 + x), (76 - strlen(bufferString)) / 2 );
-            // let me explain what just happened
-            // I needed to centralize the printed string but it's size is variable depending on the name and score of the player
-            // so I used snprintf to format a string and save it to the bufferString variable, and with this info the program move the cursor
-            // for a position that'll give us sufficient space to print our string with and maintain it centralized
-            // also, the program doesn't use newlines for that, it manually moved the string everytime the for loop loops.
-            wprintw(highscore, "%s", bufferString);
+        rewind(binFile);
+        scores = malloc(sizeof(play) * numberOfScores);
+        fread(scores, sizeof(struct play), numberOfScores, binFile);
+        bubbleSort(scores, numberOfScores);
+        mvwprintw(highscore, 2, 33, "Highscore");
+        for (int y = 0; y < 10; y++) {
+            snprintf(bufferString, 80, "Name: %s  Score: %f", scores[y].name, scores[y].score); // Prepare the string to be printed
+            mvwprintw(highscore, 4 + y, (76 - strlen(bufferString)) / 2, "%s", bufferString); // Centralizes string before printing
         }
+        free(scores);
     }
-    wrefresh(highscore); // refresh ncurses window
+    fclose(binFile);
+    wrefresh(highscore);
     delwin(highscore);
+}
+
+void addUnfinishedPlay(gameState save) {
+    if (save.level == 3) {
+        save.score = transformToPlay (save.score.name, save.timeSpent[0] + save.timeSpent[1], save.movement[0] + save.movement[1], save.level - 1);
+    } else if (save.level == 2) {
+        save.score = transformToPlay (save.score.name, save.timeSpent[0], save.movement[0], save.level - 1);
+    }
+    if (save.level == 3 || save.level == 2)
+        appendPlay(save.score);
 }

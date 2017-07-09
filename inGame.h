@@ -2,7 +2,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
-#include "highscores.h"
 
 #ifndef INGAME_H
 #define INGAME_H
@@ -16,6 +15,11 @@ typedef struct character {
 typedef struct finalPosition {
     int x, y, found;
 } finalPosition;
+
+typedef struct play {
+    char name[21];
+    float score;
+} play;
 
 typedef struct gameState {
     char scenario[260];

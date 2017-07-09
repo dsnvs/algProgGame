@@ -1,5 +1,15 @@
 #include "save.h"
 
+/*
+    These functions are very clear.
+    I just need to comment 4 things:
+    echo() is a function that enables echoing of the characters typed by the user, noecho() disables it.
+    scanw() acts like scanf() in the use cases of this code.
+    move() moves the cursor to a position passed through arguments.
+    clrtoeol() clears all characters from the cursor to the end of the line where the cursor is positioned.
+*/
+
+
 void pauseGame(gameState save) {
     FILE *stream = fopen("pause.bin", "w+b");
     if (stream == NULL) {
@@ -21,6 +31,7 @@ gameState unpauseGame() {
     fclose(stream);
     return save;
 }
+
 void putTxt(char *fileName, int i) {
     fileName[i] = '.';
     fileName[i + 1] = 't';

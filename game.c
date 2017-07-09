@@ -7,19 +7,18 @@
 void game(gameState *save) {
     int move, remainingTime;
     clock_t initialTime;
-    WINDOW * game = newwin(20, 50, 2, 2); // game window
-    WINDOW * info = newwin(20, 25, 2, 53); // actual game info window
+    WINDOW * game = newwin(20, 50, 2, 2);
+    WINDOW * info = newwin(20, 25, 2, 53);
     nodelay(game, true);
     refresh();
     keypad(game, true);
     while (save->level <= 3) {
-        if (save->level == 1) {
+        if (save->level == 1)
             remainingTime = 90;
-        } else if (save->level == 2) {
+        else if (save->level == 2)
             remainingTime = 60;
-        } else if (save->level == 3) {
+        else if (save->level == 3)
             remainingTime = 45;
-        }
         initialTime = clock();
         startCharacter(&save->player, game);
         setWindow(game, save);
@@ -54,19 +53,23 @@ void game(gameState *save) {
     delwin(game);
     delwin(info);
     save->score = transformToPlay (save->score.name, save->timeSpent[0] + save->timeSpent[1] + save->timeSpent[2], save->movement[0] + save->movement[1] + save->movement[2], save->level - 1);
+    appendPlay(save->score);
     mvprintw(10, 15, "YOU WIN!!!!");
     mvprintw(11, 15, "%.2f POINTS!", save->score.score);
     refresh();
-    return;
+    save->level = -1;
 }
 
 /*
-    simple menu with do while loop for each option
+    simple menu.
+    loops until user type a key associated with one of the options;
 */
+
 
 void menu() {
     char menuOption;
     gameState save;
+    save.level = -1;
     do {
         menuOption = getch();
         switch(menuOption) {
@@ -85,7 +88,6 @@ void menu() {
                 loadGame(&save);
                 game(&save);
             break;
-            // I DON'T REALLY KNOW IF I'LL USE THIS P CASE;
             case 'P':
             case 'p':
                 pauseGame(save);
@@ -99,18 +101,14 @@ void menu() {
                 break;
             case 'Q':
             case 'q':
-                if (save.level == 3) {
-                    save.score = transformToPlay (save.score.name, save.timeSpent[0] + save.timeSpent[1], save.movement[0] + save.movement[1], save.level - 1);
-                } else if (save.level == 2) {
-                    save.score = transformToPlay (save.score.name, save.timeSpent[0], save.movement[0], save.level - 1);
-                }
-                mvprintw(23, 1, "%f", save.score.score);
-                appendPlay(save.score);
+                addUnfinishedPlay(save);
             break;
             case '\t':
-                move(2, 0);
-                clrtobot();
-                game(&save);
+                if (save.level != -1) {
+                    move(2, 0);
+                    clrtobot();
+                    game(&save);
+                }
             break;
             default:
             break;
@@ -120,12 +118,12 @@ void menu() {
 
 
 int main() {
-    initscr(); //initialize ncurses window
-    cbreak(); // break program whenever we hit ctrl+c
-    noecho(); // disable line buffering
+    initscr(); // initializes ncurses screen
+    cbreak(); // sets terminal to cbreak mode, a mode between raw and cooked which gives us instantly access to input, but still maintain some terminal processing features like ctrl+c.
+    noecho(); // disables echoing of typed characters
     mvprintw(0, 11, "[N]ew game | [S]ave | [L]oad | [P]ause | [H]ighscore | [Q]uit");
-    refresh(); // refresh ncurses window
+    refresh();
     menu();
-    endwin(); // end ncurses window
+    endwin(); // end ncurses
     return 0;
 }
