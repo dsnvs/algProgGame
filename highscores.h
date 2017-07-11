@@ -47,6 +47,6 @@ int searchPlayer(struct play *player);
     uses a gameState passed through reference to create a score struct and appends it to the end of the file;
 */
 
-void addUnfinishedPlay(gameState save);
+void addUnfinishedPlay(gameState *save);
 
 #endif

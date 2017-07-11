@@ -5,14 +5,14 @@
 #include "save.h"
 
 void game(gameState *save) {
-    int move, remainingTime;
+    int move, remainingTime = 2;
     clock_t initialTime;
     WINDOW * game = newwin(20, 50, 2, 2);
     WINDOW * info = newwin(20, 25, 2, 53);
     nodelay(game, true);
     refresh();
     keypad(game, true);
-    while (save->level <= 3) {
+    while (save->level <= 3 && save->blocked < save->level + 2 - save->found && remainingTime > 0) {
         if (save->level == 1)
             remainingTime = 90;
         else if (save->level == 2)
@@ -27,7 +27,7 @@ void game(gameState *save) {
         box(info, 0, 0);
         infoUpdate(info, save);
         wrefresh(info);
-        while (save->found < save->level + 2) {
+        while (save->found < save->level + 2 && save->blocked < save->level + 2 - save->found && remainingTime > 0) {
             move = movePlayer(save, game);
             if (move == (int)'\t'){
                 delwin(game);
@@ -43,19 +43,31 @@ void game(gameState *save) {
             infoUpdate(info, save);
             wrefresh(info);
         }
-        wclear(info);
-        save->level++;
-        save->found = 0;
-        createLevel(save);
+            wclear(info);
+        if (save->blocked < save->level + 2 - save->found && remainingTime > 0) {
+            save->level++;
+            save->found = 0;
+            save->blocked = 0;
+            createLevel(save);
+        }
     }
     werase(info);
     werase(game);
     delwin(game);
     delwin(info);
-    save->score = transformToPlay (save->score.name, save->timeSpent[0] + save->timeSpent[1] + save->timeSpent[2], save->movement[0] + save->movement[1] + save->movement[2], save->level - 1);
-    appendPlay(save->score);
-    mvprintw(10, 15, "YOU WIN!!!!");
-    mvprintw(11, 15, "%.2f POINTS!", save->score.score);
+    move(2, 0);
+    clrtobot();
+    refresh();
+    if (save->blocked < save->level + 2 - save->found && remainingTime > 0) {
+        save->score = transformToPlay (save->score.name, save->timeSpent[0] + save->timeSpent[1] + save->timeSpent[2], save->movement[0] + save->movement[1] + save->movement[2], save->level - 1);
+        appendPlay(save->score);
+        mvprintw(10, 15, "YOU WIN!!!!");
+    } else {
+        mvprintw(10, 15, "GAME OVER!");
+        addUnfinishedPlay(save);
+    } if (save->level > 1) {
+        mvprintw(11, 15, "%.2f POINTS!", save->score.score);
+    }
     refresh();
     save->level = -1;
 }
@@ -101,7 +113,7 @@ void menu() {
                 break;
             case 'Q':
             case 'q':
-                addUnfinishedPlay(save);
+                addUnfinishedPlay(&save);
             break;
             case '\t':
                 if (save.level != -1) {

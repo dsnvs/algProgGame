@@ -62,7 +62,7 @@ void saveGame(gameState save) {
     if (stream == NULL) {
         mvprintw(23, 3, "ERROR OPENING TEXT FILE");
     } else {
-        fprintf(stream, "%s,%s,%f,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i", save.scenario, save.score.name, save.score.score, save.positions[0].y, save.positions[0].found, save.positions[0].x, save.positions[1].y, save.positions[1].x, save.positions[1].found, save.positions[2].y, save.positions[2].x, save.positions[2].found, save.positions[3].y, save.positions[3].x, save.positions[3].found, save.positions[4].y, save.positions[4].x, save.positions[4].found, save.level, save.found, save.timeSpent[0], save.timeSpent[1], save.timeSpent[2], save.movement[0], save.movement[1], save.movement[2]);
+        fprintf(stream, "%s,%s,%f,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i", save.scenario, save.score.name, save.score.score, save.positions[0].y, save.positions[0].found, save.positions[0].x, save.positions[1].y, save.positions[1].x, save.positions[1].found, save.positions[2].y, save.positions[2].x, save.positions[2].found, save.positions[3].y, save.positions[3].x, save.positions[3].found, save.positions[4].y, save.positions[4].x, save.positions[4].found, save.level, save.found, save.timeSpent[0], save.timeSpent[1], save.timeSpent[2], save.movement[0], save.movement[1], save.movement[2], save.blocked);
     }
     fclose(stream);
 }
@@ -81,7 +81,7 @@ void loadGame(gameState *save) {
     if (stream == NULL) {
         mvprintw(23, 3, "ERROR OPENING TEXT FILE");
     } else {
-        fscanf(stream, "%260[^,],%21[^,],%f,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i", save->scenario, save->score.name, &save->score.score, &save->positions[0].y, &save->positions[0].found, &save->positions[0].x, &save->positions[1].y, &save->positions[1].x, &save->positions[1].found, &save->positions[2].y, &save->positions[2].x, &save->positions[2].found, &save->positions[3].y, &save->positions[3].x, &save->positions[3].found, &save->positions[4].y, &save->positions[4].x, &save->positions[4].found, &save->level, &save->found, &save->timeSpent[0], &save->timeSpent[1], &save->timeSpent[2], &save->movement[0], &save->movement[1], &save->movement[2]);
+        fscanf(stream, "%260[^,],%21[^,],%f,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i", save->scenario, save->score.name, &save->score.score, &save->positions[0].y, &save->positions[0].found, &save->positions[0].x, &save->positions[1].y, &save->positions[1].x, &save->positions[1].found, &save->positions[2].y, &save->positions[2].x, &save->positions[2].found, &save->positions[3].y, &save->positions[3].x, &save->positions[3].found, &save->positions[4].y, &save->positions[4].x, &save->positions[4].found, &save->level, &save->found, &save->timeSpent[0], &save->timeSpent[1], &save->timeSpent[2], &save->movement[0], &save->movement[1], &save->movement[2], &save->blocked);
         fclose(stream);
         refresh();
     }

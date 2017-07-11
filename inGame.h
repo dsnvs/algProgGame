@@ -13,7 +13,7 @@ typedef struct character {
 } character;
 
 typedef struct finalPosition {
-    int x, y, found;
+    int y, x, found;
 } finalPosition;
 
 typedef struct play {
@@ -21,12 +21,16 @@ typedef struct play {
     float score;
 } play;
 
+typedef struct block {
+    int y, x, blocked;
+} block;
+
 typedef struct gameState {
     char scenario[260];
     play score;
     character player;
     finalPosition positions[5];
-    int level, found, timeSpent[3], movement[3];
+    int level, found, timeSpent[3], movement[3], blocked;
 } gameState;
 
 void deletePlayer (character player);
@@ -44,4 +48,5 @@ void infoUpdate (WINDOW *info, gameState *save);
 gameState saveState(character *player, finalPosition positions[5], int level, int foundPositions, int timeSpent[3]);
 void setWindow(WINDOW* game, gameState *save);
 void newGame(gameState *save);
+int gotBlock(int y, int x, WINDOW *game);
 #endif

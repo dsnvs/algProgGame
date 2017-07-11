@@ -81,12 +81,12 @@ void showHighscores() {
     delwin(highscore);
 }
 
-void addUnfinishedPlay(gameState save) {
-    if (save.level == 3) {
-        save.score = transformToPlay (save.score.name, save.timeSpent[0] + save.timeSpent[1], save.movement[0] + save.movement[1], save.level - 1);
-    } else if (save.level == 2) {
-        save.score = transformToPlay (save.score.name, save.timeSpent[0], save.movement[0], save.level - 1);
+void addUnfinishedPlay(gameState *save) {
+    if (save->level == 3) {
+        save->score = transformToPlay (save->score.name, save->timeSpent[0] + save->timeSpent[1], save->movement[0] + save->movement[1], save->level - 1);
+    } else if (save->level == 2) {
+        save->score = transformToPlay (save->score.name, save->timeSpent[0], save->movement[0], save->level - 1);
     }
-    if (save.level == 3 || save.level == 2)
-        appendPlay(save.score);
+    if (save->level == 3 || save->level == 2)
+        appendPlay(save->score);
 }

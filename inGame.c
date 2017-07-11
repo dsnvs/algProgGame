@@ -10,6 +10,9 @@ void foundPos (gameState *save, WINDOW *game, int y, int x) {
             mvwaddch(game, y + 1, x + 1, 'x');
             save->positions[i].found = 1;
             save->found++;
+            if (gotBlock(y, x, game)) {
+                save->blocked--;
+            }
         }
     }
 }
@@ -78,6 +81,9 @@ void moveUp(gameState *save, WINDOW *game) {
         validMove = checkChar(y, x, game, 'u');
         if (validMove == ' ') {
             moveBlock(save, game, y - 2, x, y, x);
+            if (gotBlock(y - 2, x, game)) {
+                save->blocked++;
+            }
             deletePlayer(save->player);
             save->player.y -= 2;
             save->movement[save->level - 1]++;
@@ -101,6 +107,9 @@ void moveDown(gameState *save, WINDOW *game) {
         validMove = checkChar(y, x, game, 'd');
         if (validMove == ' ') {
             moveBlock(save, game, y + 2, x, y, x);
+            if (gotBlock(y + 2, x, game)) {
+                save->blocked++;
+            }
             deletePlayer(save->player);
             save->player.y += 2;
             save->movement[save->level - 1]++;
@@ -123,6 +132,9 @@ void moveLeft(gameState *save, WINDOW *game) {
         validMove = checkChar(y, x, game, 'l');
         if (validMove == ' ') {
             moveBlock(save, game, y, x - 2, y, x);
+            if (gotBlock(y, x - 2, game)) {
+                save->blocked++;
+            }
             deletePlayer(save->player);
             save->player.x -= 2;
             save->movement[save->level - 1]++;
@@ -145,6 +157,9 @@ void moveRight(gameState *save, WINDOW *game) {
         validMove = checkChar(y, x, game, 'r');
         if (validMove == ' ') {
             moveBlock(save, game, y, x + 2, y, x);
+            if (gotBlock(y, x + 2, game)) {
+                save->blocked++;
+            }
             deletePlayer(save->player);
             save->player.x += 2;
             save->movement[save->level - 1]++;
@@ -152,6 +167,16 @@ void moveRight(gameState *save, WINDOW *game) {
         foundPos(save, game, y, x + 2);
     }
 };
+
+int gotBlock(int y, int x, WINDOW *game) {
+    int blocks = 0;
+    if (checkChar(y, x, game, 'u') == 'x' || (checkChar(y, x, game, 'd') == 'x')) {
+        if (checkChar(y, x, game, 'r') == 'x' || (checkChar(y, x, game, 'l') == 'x')) {
+            blocks = 1;
+        }
+    }
+    return blocks;
+}
 
 
 int randomPositionsGenerator(char *txt) {
@@ -239,7 +264,7 @@ void createLevel (gameState *save) {
 }
 
 void setWindow(WINDOW* game, gameState *save) {
-    int x, y, j = 0;
+    int x, y, j = 0, k = 0;
     mvwinch(game, 0, 0);
     for (int i = 0; i < 259; i++) {
         if (save->scenario[i] == 'x' || save->scenario[i] == '0' || save->scenario[i] == '2') {
@@ -256,6 +281,9 @@ void setWindow(WINDOW* game, gameState *save) {
             save->positions[j].found = 0;
             j++;
             blockCreator('0', game);
+        } else if (save->scenario[i] == '2') {
+            k++;
+            blockCreator(save->scenario[i], game);
         }
     }
 }
@@ -280,9 +308,10 @@ void newGame(gameState *save) {
     character player;
     save->level = 1;
     save->found = 0;
+    save->blocked = 0;
     for (int i = 0; i < 5; i++) {
-        save->positions[i].x = 0;
         save->positions[i].y = 0;
+        save->positions[i].x = 0;
         save->positions[i].found = 0;
         if ( i < 3) {
             save->timeSpent[i] = 0;
