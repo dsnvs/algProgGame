@@ -29,7 +29,7 @@ void bubbleSort(struct play* array, int i);
 
 /*
     showHighscores reads all the data from the binaryfile, sort the data and display it.
-*/
+*/ 
 
 void showHighscores();
 

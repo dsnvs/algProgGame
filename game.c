@@ -130,6 +130,7 @@ void menu() {
 
 
 int main() {
+    srand(time(NULL));
     initscr(); // initializes ncurses screen
     cbreak(); // sets terminal to cbreak mode, a mode between raw and cooked which gives us instantly access to input, but still maintain some terminal processing features like ctrl+c.
     noecho(); // disables echoing of typed characters

@@ -181,7 +181,6 @@ int gotBlock(int y, int x, WINDOW *game) {
 
 int randomPositionsGenerator(char *txt) {
     int randxy, aleatorios = 0;
-    srand(time(NULL));
     for (int i = 0; i < 259; i++) {
         if (txt[i] == '2') {
             aleatorios++;
